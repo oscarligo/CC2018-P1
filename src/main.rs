@@ -31,18 +31,20 @@ fn main() {
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height, Color::BLACK);
 
     framebuffer.set_background_color(Color::BLACK);
-    
 
     let maze: Maze = load_maze("src/maze.txt"); 
 
     let block_size = window_width as usize / maze[0].len();
-    let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0, 5.0, 0.1); 
+    let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0, 5.0, 0.1);
+    player.set_initial_position(&maze);
+
+
 
     while !window.window_should_close() {
         process_events(&mut window, &mut player);
         framebuffer.clear();
+        render_maze(&mut framebuffer, &maze, block_size);
         render_player(&mut framebuffer, &mut player);
-        render_maze(&mut framebuffer, &maze, &mut player, block_size);
         cast_ray(&mut framebuffer, &mut player, &maze, block_size);
         
 

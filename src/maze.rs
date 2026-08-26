@@ -22,7 +22,6 @@ pub fn draw_cell(
     yo: usize,
     block_size: usize,
     cell: char,
-    player: &mut Player 
 ) {
     let x = xo ;
     let y = yo ;
@@ -58,11 +57,6 @@ pub fn draw_cell(
                 }
             }
         }
-        'p' => {
-            // Handle player starting position
-            player.set_position(Vector2::new((x + block_size / 2) as f32, (y + block_size / 2) as f32));
-        }
-
     
         _ => {
             // Handle other characters 
@@ -75,13 +69,12 @@ pub fn draw_cell(
 pub fn render_maze(
     framebuffer: &mut Framebuffer, 
     maze: &Maze,
-    player: &mut Player,    
     block_size: usize) {
     for (row_index, row) in maze.iter().enumerate() {
         for (col_index, &cell) in row.iter().enumerate() {
             let xo = col_index * block_size;
             let yo = row_index * block_size;
-            draw_cell(framebuffer, xo, yo, block_size, cell, player);
+            draw_cell(framebuffer, xo, yo, block_size, cell);
         }
     }
 }

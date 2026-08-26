@@ -1,5 +1,6 @@
 use raylib::prelude::*;
 use std::f32::consts::PI;
+use crate::maze::Maze;
 
 pub struct Player {
     pub position: Vector2,
@@ -38,6 +39,18 @@ impl Player {
         self.angle -= angle;
         if self.angle < 0.0 {
             self.angle += 2.0 * PI;
+        }
+    }
+
+    pub fn set_initial_position(&mut self, maze: &Maze) {
+        for (j, row) in maze.iter().enumerate() {
+            for (i, &cell) in row.iter().enumerate() {
+                if cell == 'p' {
+                    self.position.x = (i * 64 + 32) as f32; // Center of the block
+                    self.position.y = (j * 64 + 32) as f32; // Center of the block
+                    return;
+                }
+            }
         }
     }
 
