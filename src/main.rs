@@ -41,7 +41,7 @@ fn main() {
 
 
     while !window.window_should_close() {
-        process_events(&mut window, &mut player);
+        process_events(&mut window, &mut player, &maze, block_size);
         framebuffer.clear();
         render_maze(&mut framebuffer, &maze, block_size);
         render_player(&mut framebuffer, &mut player);

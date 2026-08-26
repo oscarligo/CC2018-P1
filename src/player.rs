@@ -14,6 +14,19 @@ impl Player {
         Player { position, angle, move_speed, rotation_speed }
     }
 
+    fn try_move(&mut self, distance: f32, maze: &Maze, block_size: usize) {
+        let next_x = self.position.x + distance * self.angle.cos();
+        let next_y = self.position.y + distance * self.angle.sin();
+
+        let cell = maze
+            .get(next_y as usize / block_size)
+            .and_then(|row| row.get(next_x as usize / block_size));
+
+        if matches!(cell, Some(' ' | 'p' | 'g')) {
+            self.position = Vector2::new(next_x, next_y);
+        }
+    }
+
     pub fn get_position(&self) -> Vector2 {
         self.position
     }
@@ -22,17 +35,12 @@ impl Player {
         self.angle
     }
 
-    pub fn set_position(&mut self, position: Vector2) {
-        self.position = position;
-    }
-    pub fn move_forward(&mut self) {
-        self.position.x += self.move_speed * self.angle.cos();
-        self.position.y += self.move_speed * self.angle.sin();
+    pub fn move_forward(&mut self, maze: &Maze, block_size: usize) {
+        self.try_move(self.move_speed, maze, block_size);
     }
 
-    pub fn move_backward(&mut self) {
-        self.position.x -= self.move_speed * self.angle.cos();
-        self.position.y -= self.move_speed * self.angle.sin();
+    pub fn move_backward(&mut self, maze: &Maze, block_size: usize) {
+        self.try_move(-self.move_speed, maze, block_size);
     }
 
     pub fn rotate_left(&mut self) {
