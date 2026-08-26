@@ -4,11 +4,13 @@ use std::f32::consts::PI;
 pub struct Player {
     pub position: Vector2,
     pub angle: f32,
+    pub move_speed: f32,
+    pub rotate_speed: f32,
 }
 
 impl Player {
-    pub fn new(position: Vector2, angle: f32) -> Self {
-        Player { position, angle }
+    pub fn new(position: Vector2, angle: f32, move_speed: f32, rotate_speed: f32) -> Self {
+        Player { position, angle, move_speed, rotate_speed }
     }
 
     pub fn get_position(&self) -> Vector2 {

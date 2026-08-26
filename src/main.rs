@@ -3,6 +3,7 @@ mod render;
 mod maze;
 mod player;
 mod caster;
+mod events;
 
 use raylib::prelude::*;
 use framebuffer::Framebuffer;
@@ -13,6 +14,7 @@ use std::time::Duration;
 use maze::*;
 use caster::cast_ray;  
 use render::*;
+use events::process_events;
 
 fn main() {
     let window_width: i32 = 800;
@@ -34,10 +36,10 @@ fn main() {
     let maze: Maze = load_maze("src/maze.txt"); 
 
     let block_size = window_width as usize / maze[0].len();
-    let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0);  
+    let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0, 5.0, 0.1); 
 
     while !window.window_should_close() {
-        
+        process_events(&mut window, &mut player);
         framebuffer.clear();
         render_player(&mut framebuffer, &mut player);
         render_maze(&mut framebuffer, &maze, &mut player, block_size);
