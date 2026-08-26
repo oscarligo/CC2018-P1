@@ -13,13 +13,12 @@ pub fn render_player(framebuffer: &mut Framebuffer, player: &Player) {
 
 pub fn render_2d(
     framebuffer: &mut Framebuffer,
-    player: &Player,
+    player: &mut Player,
     maze: &Maze,
-    translate_x: f32,
-    translate_y: f32,
     block_size: usize,
 ) {
-    render_maze(framebuffer, maze, block_size);
+    render_maze(framebuffer, maze,  player, block_size);
+    render_player(framebuffer, player);
     
 
 }

@@ -34,15 +34,14 @@ fn main() {
     let maze: Maze = load_maze("src/maze.txt"); 
 
     let block_size = window_width as usize / maze[0].len();
-    let player = Player::new(Vector2::new(100.0, 100.0), PI / 4.0);  
+    let mut player = Player::new(Vector2::new(100.0, 100.0), PI / 4.0);  
 
     while !window.window_should_close() {
         
         framebuffer.clear();
-
-        render_2d(&mut framebuffer, &player, &maze, 0.0, 0.0, block_size);
-        render_player(&mut framebuffer, &player);
-        cast_ray(&mut framebuffer, &player, &maze, block_size);
+        render_maze(&mut framebuffer, &maze, &mut player, block_size);
+        render_player(&mut framebuffer, &mut player);
+        cast_ray(&mut framebuffer, &mut player, &maze, block_size);
         
 
         framebuffer.swap_buffers(&mut window, &thread);
