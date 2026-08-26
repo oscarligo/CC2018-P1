@@ -23,7 +23,7 @@ fn main() {
 
     let (mut window, thread) = raylib::init()
         .size(window_width, window_height)
-        .title("Polygon Drawing")
+        .title("Example")
         .build();
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height, Color::BLACK);
@@ -34,13 +34,13 @@ fn main() {
     let maze: Maze = load_maze("src/maze.txt"); 
 
     let block_size = window_width as usize / maze[0].len();
-    let mut player = Player::new(Vector2::new(100.0, 100.0), PI / 4.0);  
+    let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0);  
 
     while !window.window_should_close() {
         
         framebuffer.clear();
-        render_maze(&mut framebuffer, &maze, &mut player, block_size);
         render_player(&mut framebuffer, &mut player);
+        render_maze(&mut framebuffer, &maze, &mut player, block_size);
         cast_ray(&mut framebuffer, &mut player, &maze, block_size);
         
 

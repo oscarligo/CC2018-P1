@@ -9,17 +9,3 @@ pub fn render_player(framebuffer: &mut Framebuffer, player: &Player) {
 }
 
 
-
-
-pub fn render_2d(
-    framebuffer: &mut Framebuffer,
-    player: &mut Player,
-    maze: &Maze,
-    block_size: usize,
-) {
-    render_maze(framebuffer, maze,  player, block_size);
-    render_player(framebuffer, player);
-    
-
-}
-
