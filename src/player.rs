@@ -5,13 +5,14 @@ use crate::maze::Maze;
 pub struct Player {
     pub position: Vector2,
     pub angle: f32,
+    pub fov: f32,
     pub move_speed: f32,
     pub rotation_speed: f32,
 }
 
 impl Player {
-    pub fn new(position: Vector2, angle: f32, move_speed: f32, rotation_speed: f32) -> Self {
-        Player { position, angle, move_speed, rotation_speed }
+    pub fn new(position: Vector2, angle: f32, move_speed: f32, rotation_speed: f32, fov: f32) -> Self {
+        Player { position, angle, move_speed, rotation_speed, fov }
     }
 
     fn try_move(&mut self, distance: f32, maze: &Maze, block_size: usize) {
