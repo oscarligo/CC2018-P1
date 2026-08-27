@@ -9,6 +9,7 @@ pub struct Intersec{
     pub impact: char,
     pub hit_x: f32,
     pub hit_y: f32,
+    pub vertical_hit: bool,
 }
 
 
@@ -22,24 +23,29 @@ pub fn cast_ray(
     cast_step: f32
 ) -> Intersec {
     let mut d = 0.0;
+    let ray_angle = player.angle + angle_offset;
+    let ray_cos = ray_angle.cos();
+    let ray_sin = ray_angle.sin();
     framebuffer.set_current_color(Color::WHITESMOKE);
 
     loop{
-        let cos = d * (player.angle + angle_offset).cos();
-        let sin = d * (player.angle + angle_offset).sin();
-        
-        let x = (player.position.x + cos) as usize;
-        let y = (player.position.y + sin) as usize;
+        let hit_x = player.position.x + d * ray_cos;
+        let hit_y = player.position.y + d * ray_sin;
+        let x = hit_x as usize;
+        let y = hit_y as usize;
 
         let i = x / block_size;
         let j = y / block_size;
 
         if maze[j][i] != ' ' && maze[j][i] != 'p' {
+            let previous_d = (d - cast_step).max(0.0);
+            let previous_i = (player.position.x + previous_d * ray_cos) as usize / block_size;
             return Intersec {
                 distance: d,
                 impact: maze[j][i],
-                hit_x: x as f32,
-                hit_y: y as f32,
+                hit_x,
+                hit_y,
+                vertical_hit: previous_i != i,
             };
         }
 

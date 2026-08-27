@@ -15,15 +15,11 @@ pub fn render3d(
     player: &Player,
     maze: &Maze,
     block_size: usize,
-    texture_manager: &mut TextureManager
+    texture_manager: &TextureManager,
 ) {
     let num_rays = framebuffer.width;
     let height = framebuffer.height as f32;
     let half_height = height / 2.0;
-    let texture_size = 16.0;
-
-    framebuffer.set_current_color(Color::GRAY);
-
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
         let angle_offset = (current_ray - 0.5) * player.fov;
@@ -32,26 +28,28 @@ pub fn render3d(
         let corrected_distance = intersect.distance * angle_offset.cos();
         let distance_to_wall = corrected_distance.max(0.1);
 
-        if intersect.impact == '+' {
-            framebuffer.set_current_color(Color::DARKGRAY);
-        } else {
-            framebuffer.set_current_color(Color::GRAY);
-        }
-
         let stake_height = (block_size as f32 * height) / distance_to_wall;
-
-        let stake_top = (half_height - (stake_height / 2.0)).max(0.0).min(height) as u32;
-        let stake_bottom = (half_height + (stake_height / 2.0)).max(0.0).min(height) as u32;
-
-        let hit_offset = (intersect.hit_x % block_size as f32) + (intersect.hit_y % block_size as f32);
-        let tx = (((hit_offset % block_size as f32) / block_size as f32) * texture_size as f32) as u32;
+        let stake_top_raw = half_height - stake_height / 2.0;
+        let stake_top = stake_top_raw.max(0.0).min(height) as u32;
+        let stake_bottom = (half_height + stake_height / 2.0).max(0.0).min(height) as u32;
+        let u = texture_u(
+            intersect.hit_x,
+            intersect.hit_y,
+            intersect.vertical_hit,
+            block_size as f32,
+        );
 
         for y in stake_top..stake_bottom {
-            let ty = (((y  - stake_top ) / stake_height as u32) * texture_size as u32) as u32;
-            
-            let color = texture_manager.get_pixel_color(intersect.impact, tx, ty);
+            let v = (y as f32 - stake_top_raw) / stake_height;
+            let color = texture_manager.get_pixel_color(intersect.impact, u, v);
             framebuffer.set_current_color(color);
             framebuffer.set_pixel(i as u32, y);
         }
     }
+}
+
+// Calculate the texture coordinate u based on the hit position and whether it was a vertical hit
+fn texture_u(hit_x: f32, hit_y: f32, vertical_hit: bool, block_size: f32) -> f32 {
+    let offset = if vertical_hit { hit_y } else { hit_x };
+    offset.rem_euclid(block_size) / block_size
 }

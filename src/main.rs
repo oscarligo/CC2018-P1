@@ -43,7 +43,7 @@ fn main() {
     player.set_initial_position(&maze, block_size);
     let num_rays = 5; 
 
-    let mut texture_manager = TextureManager::new(&mut window, &thread);
+    let texture_manager = TextureManager::new();
 
 
 
@@ -51,7 +51,7 @@ fn main() {
         framebuffer.clear();
 
         process_events(&mut window, &mut player, &maze, block_size);
-        render::render3d(&mut framebuffer, &player, &maze, block_size, &mut texture_manager);
+        render::render3d(&mut framebuffer, &player, &maze, block_size, &texture_manager);
 
         render_maze(&mut framebuffer, &maze, block_size);
         render_player(&mut framebuffer, &mut player);
