@@ -8,10 +8,10 @@ pub struct TextureManager {
 impl TextureManager {
     pub fn new() -> Self {
         Self {
-            log: Image::load_image("assets/oak_log.png")
+            log: Image::load_image("assets/oak_log_wall.png")
                 .expect("Failed to load oak log texture"),
-            cobblestone: Image::load_image("assets/cobblestone.png")
-                .expect("Failed to load assets/cobblestone.png"),
+            cobblestone: Image::load_image("assets/cobblestone_wall.png")
+                .expect("Failed to load cobblestone texture"),
         }
     }
 
