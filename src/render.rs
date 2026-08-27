@@ -3,6 +3,7 @@ use crate::framebuffer::Framebuffer;
 use crate::player::Player;
 use crate::maze::*;
 use crate::caster::cast_ray;
+use crate::texture_manager::TextureManager;
 
 pub fn render_player(framebuffer: &mut Framebuffer, player: &Player) {
     framebuffer.set_current_color(Color::BLUE);
@@ -14,10 +15,12 @@ pub fn render3d(
     player: &Player,
     maze: &Maze,
     block_size: usize,
+    texture_manager: &mut TextureManager
 ) {
     let num_rays = framebuffer.width;
     let height = framebuffer.height as f32;
     let half_height = height / 2.0;
+    let texture_size = 16.0;
 
     framebuffer.set_current_color(Color::GRAY);
 
@@ -40,7 +43,14 @@ pub fn render3d(
         let stake_top = (half_height - (stake_height / 2.0)).max(0.0).min(height) as u32;
         let stake_bottom = (half_height + (stake_height / 2.0)).max(0.0).min(height) as u32;
 
+        let hit_offset = (intersect.hit_x % block_size as f32) + (intersect.hit_y % block_size as f32);
+        let tx = (((hit_offset % block_size as f32) / block_size as f32) * texture_size as f32) as u32;
+
         for y in stake_top..stake_bottom {
+            let ty = (((y  - stake_top ) / stake_height as u32) * texture_size as u32) as u32;
+            
+            let color = texture_manager.get_pixel_color(intersect.impact, tx, ty);
+            framebuffer.set_current_color(color);
             framebuffer.set_pixel(i as u32, y);
         }
     }

@@ -7,6 +7,8 @@ use crate::maze::Maze;
 pub struct Intersec{
     pub distance: f32,
     pub impact: char,
+    pub hit_x: f32,
+    pub hit_y: f32,
 }
 
 
@@ -36,6 +38,8 @@ pub fn cast_ray(
             return Intersec {
                 distance: d,
                 impact: maze[j][i],
+                hit_x: x as f32,
+                hit_y: y as f32,
             };
         }
 

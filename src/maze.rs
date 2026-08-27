@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use raylib::ffi::{CSSPalette, RaylibPalette};
 use raylib::prelude::*;
 
 use crate::framebuffer::Framebuffer;

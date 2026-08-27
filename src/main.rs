@@ -4,6 +4,7 @@ mod maze;
 mod player;
 mod caster;
 mod events;
+mod texture_manager;
 
 use raylib::prelude::*;
 use framebuffer::Framebuffer;
@@ -15,6 +16,7 @@ use maze::*;
 use caster::cast_ray;  
 use render::*;
 use events::process_events;
+use texture_manager::TextureManager;
 
 fn main() {
     let window_width: i32 = 800;
@@ -41,13 +43,15 @@ fn main() {
     player.set_initial_position(&maze, block_size);
     let num_rays = 5; 
 
+    let mut texture_manager = TextureManager::new(&mut window, &thread);
+
 
 
     while !window.window_should_close() {
         framebuffer.clear();
 
         process_events(&mut window, &mut player, &maze, block_size);
-        render::render3d(&mut framebuffer, &player, &maze, block_size);
+        render::render3d(&mut framebuffer, &player, &maze, block_size, &mut texture_manager);
 
         render_maze(&mut framebuffer, &maze, block_size);
         render_player(&mut framebuffer, &mut player);
