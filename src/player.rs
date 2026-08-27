@@ -59,12 +59,15 @@ impl Player {
     }
 
 
-    pub fn set_initial_position(&mut self, maze: &Maze) {
-        for (j, row) in maze.iter().enumerate() {
-            for (i, &cell) in row.iter().enumerate() {
+
+    pub fn set_initial_position(&mut self, maze: &Maze, block_size: usize) {
+        for (row_index, row) in maze.iter().enumerate() {
+            for (col_index, &cell) in row.iter().enumerate() {
                 if cell == 'p' {
-                    self.position.x = (i * 64 + 32) as f32; // Center of the block
-                    self.position.y = (j * 64 + 32) as f32; // Center of the block
+                    self.position = Vector2::new(
+                        (col_index * block_size) as f32 + (block_size as f32 / 2.0),
+                        (row_index * block_size) as f32 + (block_size as f32 / 2.0),
+                    );
                     return;
                 }
             }

@@ -1,9 +1,9 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use raylib::ffi::{CSSPalette, RaylibPalette};
 use raylib::prelude::*;
 
 use crate::framebuffer::Framebuffer;
-use crate::player::Player;
 
 pub type Maze = Vec<Vec<char>>;
 
@@ -29,7 +29,7 @@ pub fn draw_cell(
     match cell {
         '+' => {
             // Draw wall
-            framebuffer.set_current_color(Color::DARKGREEN);
+            framebuffer.set_current_color(Color::BLACK);
             for i in 0..block_size {
                 for j in 0..block_size {
                     framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
@@ -38,10 +38,16 @@ pub fn draw_cell(
         }
         ' ' => {
             // Draw empty space
+            framebuffer.set_current_color(Color::GRAY);    
+            for i in 0..block_size {
+                for j in 0..block_size {
+                    framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
+                }
+            }
         }
         '|' => {
             // Handle vertical walls
-            framebuffer.set_current_color(Color::GREEN);
+            framebuffer.set_current_color(Color::BLACK);
             for i in 0..block_size {
                 for j in 0..block_size {
                     framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
@@ -50,7 +56,7 @@ pub fn draw_cell(
         }
         '-' => {
             // Handle horizontal walls  
-            framebuffer.set_current_color(Color::GREEN);
+            framebuffer.set_current_color(Color::BLACK);
             for i in 0..block_size {
                 for j in 0..block_size {
                     framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
@@ -60,6 +66,12 @@ pub fn draw_cell(
     
         _ => {
             // Handle other characters 
+            framebuffer.set_current_color(Color::GRAY);
+            for i in 0..block_size {
+                for j in 0..block_size {    
+                    framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
+                }
+            }
         }
     }
 
