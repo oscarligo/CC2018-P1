@@ -4,6 +4,9 @@ use crate::player::Player;
 use crate::maze::*;
 use crate::caster::cast_ray;
 use crate::texture_manager::TextureManager;
+use crate::enemy::Enemy;
+use std::f32::consts::PI;
+
 
 pub fn render_player(framebuffer: &mut Framebuffer, player: &Player) {
     framebuffer.set_current_color(Color::BLUE);
@@ -16,10 +19,11 @@ pub fn render3d(
     maze: &Maze,
     block_size: usize,
     texture_manager: &TextureManager,
-) {
+) -> Vec<f32> {
     let num_rays = framebuffer.width;
     let height = framebuffer.height as f32;
     let half_height = height / 2.0;
+    let mut depth_buffer = vec![f32::INFINITY; num_rays as usize];
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
         let angle_offset = (current_ray - 0.5) * player.fov;
@@ -27,6 +31,7 @@ pub fn render3d(
 
         let corrected_distance = intersect.distance * angle_offset.cos();
         let distance_to_wall = corrected_distance.max(0.1);
+        depth_buffer[i as usize] = distance_to_wall;
 
         let stake_height = (block_size as f32 * height) / distance_to_wall;
         let stake_top_raw = half_height - stake_height / 2.0;
@@ -46,10 +51,71 @@ pub fn render3d(
             framebuffer.set_pixel(i as u32, y);
         }
     }
+    depth_buffer
 }
 
-// Calculate the texture coordinate u based on the hit position and whether it was a vertical hit
 fn texture_u(hit_x: f32, hit_y: f32, vertical_hit: bool, block_size: f32) -> f32 {
     let offset = if vertical_hit { hit_y } else { hit_x };
     offset.rem_euclid(block_size) / block_size
+}
+
+pub fn render_enemies(
+    framebuffer: &mut Framebuffer,
+    player: &Player,
+    enemies: &[Enemy],
+    block_size: usize,
+    depth_buffer: &[f32],
+    texture_manager: &TextureManager,
+) {
+    let mut ordered: Vec<_> = enemies.iter().collect();
+    ordered.sort_by(|a, b| {
+        distance_squared(b.position, player.position)
+            .total_cmp(&distance_squared(a.position, player.position))
+    });
+
+    for enemy in ordered {
+        let dx = enemy.position.x - player.position.x;
+        let dy = enemy.position.y - player.position.y;
+        let distance = (dx * dx + dy * dy).sqrt();
+        let relative_angle = (dy.atan2(dx) - player.angle + PI).rem_euclid(2.0 * PI) - PI;
+
+        if relative_angle.abs() > player.fov / 2.0 {
+            continue;
+        }
+
+        let depth = distance * relative_angle.cos();
+        if depth <= 0.0 {
+            continue;
+        }
+
+        let size = block_size as f32 * framebuffer.height as f32 / depth;
+        let center_x = (relative_angle / player.fov + 0.5) * framebuffer.width as f32;
+        let left = center_x - size / 2.0;
+        let top = (framebuffer.height as f32 - size) / 2.0;
+        let start_x = left.max(0.0) as u32;
+        let end_x = (left + size).min(framebuffer.width as f32) as u32;
+        let start_y = top.max(0.0) as u32;
+        let end_y = (top + size).min(framebuffer.height as f32) as u32;
+
+        for x in start_x..end_x {
+            if depth >= depth_buffer[x as usize] {
+                continue;
+            }
+            let u = (x as f32 - left) / size;
+            for y in start_y..end_y {
+                let v = (y as f32 - top) / size;
+                let color = texture_manager.get_sprite_pixel(enemy.marker, enemy.frame(), u, v);
+                if color.a > 0 {
+                    framebuffer.set_current_color(color);
+                    framebuffer.set_pixel(x, y);
+                }
+            }
+        }
+    }
+}
+
+fn distance_squared(a: Vector2, b: Vector2) -> f32 {
+    let dx = a.x - b.x;
+    let dy = a.y - b.y;
+    dx * dx + dy * dy
 }
