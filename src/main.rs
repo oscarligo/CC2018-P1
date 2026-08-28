@@ -128,6 +128,7 @@ fn main() {
                     &player,
                     &maze,
                     block_size,
+                    current_world,
                     &texture_manager,
                 );
                 render::render_sprites(

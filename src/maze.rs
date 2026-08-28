@@ -62,6 +62,46 @@ pub fn draw_cell(
                 }
             }
         }
+
+        '#' => {
+            // Handle special wall
+            framebuffer.set_current_color(Color::BLACK);
+            for i in 0..block_size {
+                for j in 0..block_size {
+                    framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
+                }
+            }
+        }
+
+        '&' => {
+            // Handle another special wall
+            framebuffer.set_current_color(Color::BLACK);
+            for i in 0..block_size {
+                for j in 0..block_size {
+                    framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
+                }
+            }
+        }
+
+        'w' => {
+            // Handle portal
+            framebuffer.set_current_color(Color::PURPLE);
+            for i in 0..block_size {
+                for j in 0..block_size {
+                    framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
+                }
+            }
+        }
+
+        'e' => {
+            // Handle enemy
+            framebuffer.set_current_color(Color::RED);
+            for i in 0..block_size {
+                for j in 0..block_size {
+                    framebuffer.set_pixel((x + i) as u32, (y + j) as u32);
+                }
+            }
+        }
     
         _ => {
             // Handle other characters 

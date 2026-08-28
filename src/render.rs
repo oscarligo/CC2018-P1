@@ -19,13 +19,14 @@ pub fn render3d(
     player: &Player,
     maze: &Maze,
     block_size: usize,
+    world: usize,
     texture_manager: &TextureManager,
 ) -> Vec<f32> {
     let num_rays = framebuffer.width;
     let height = framebuffer.height as f32;
     let half_height = height / 2.0;
     let mut depth_buffer = vec![f32::INFINITY; num_rays as usize];
-    render_floor_and_ceiling(framebuffer, player, block_size, texture_manager);
+    render_floor_and_ceiling(framebuffer, player, block_size, world, texture_manager);
 
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
@@ -61,6 +62,7 @@ fn render_floor_and_ceiling(
     framebuffer: &mut Framebuffer,
     player: &Player,
     block_size: usize,
+    world: usize,
     texture_manager: &TextureManager,
 ) {
     let width = framebuffer.width as f32;
@@ -82,9 +84,9 @@ fn render_floor_and_ceiling(
             let v = world_y.rem_euclid(block_size as f32) / block_size as f32;
 
             let color = if y < framebuffer.height / 2 {
-                texture_manager.get_ceiling_pixel(u, v)
+                texture_manager.get_ceiling_pixel(world, u, v)
             } else {
-                texture_manager.get_floor_pixel(u, v)
+                texture_manager.get_floor_pixel(world, u, v)
             };
             framebuffer.set_current_color(color);
             framebuffer.set_pixel(x, y);
