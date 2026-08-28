@@ -6,6 +6,7 @@ mod caster;
 mod events;
 mod texture_manager;
 mod enemy;
+mod screens;
 
 use raylib::prelude::*;
 use framebuffer::Framebuffer;
@@ -19,6 +20,16 @@ use render::*;
 use events::process_events;
 use texture_manager::TextureManager;
 use enemy::Enemy;
+use screens::*;
+
+#[derive(Clone, Copy)]
+enum Screen {
+    Main,
+    Worlds(usize),
+    Game,
+}
+
+const WORLD_MAPS: [&str; 2] = ["src/world_1.txt", "src/world_2.txt"];
 
 fn main() {
     let window_width: i32 = 800;
@@ -31,13 +42,12 @@ fn main() {
         .size(window_width, window_height)
         .title("Example")
         .build();
-    window.disable_cursor();
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height, Color::BLACK);
 
     framebuffer.set_background_color(Color::BLACK);
 
-    let maze: Maze = load_maze("src/maze.txt"); 
+    let mut maze: Maze = load_maze(WORLD_MAPS[0]);
 
     let block_size = 10;
     let player_movement_speed = block_size as f32 / 5.0;
@@ -48,38 +58,91 @@ fn main() {
 
     let texture_manager = TextureManager::new();
     let mut enemies = Enemy::from_maze(&maze, block_size);
+    let main_screen = window.load_texture(&thread, "assets/main_screen.png")
+        .expect("Failed to load main screen");
+    let world_screens = [
+        window.load_texture(&thread, "assets/world_1.png")
+            .expect("Failed to load world 1 screen"),
+        window.load_texture(&thread, "assets/world_2.png")
+            .expect("Failed to load world 2 screen"),
+    ];
+    let mut screen = Screen::Main;
 
 
 
     while !window.window_should_close() {
-        framebuffer.clear();
+        match screen {
+            Screen::Main => {
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    screen = Screen::Worlds(0);
+                }
+                draw_screen(&mut window, &thread, &main_screen, window_width, window_height);
+            }
+            Screen::Worlds(mut selected) => {
+                if window.is_key_pressed(KeyboardKey::KEY_W)
+                    || window.is_key_pressed(KeyboardKey::KEY_S)
+                {
+                    selected = next_world(selected);
+                }
 
-        process_events(&mut window, &mut player, &maze, block_size);
-        enemies.iter_mut().for_each(|enemy| enemy.update(window.get_frame_time()));
-        let depth_buffer = render::render3d(&mut framebuffer, &player, &maze, block_size, &texture_manager);
-        render::render_enemies(
-            &mut framebuffer,
-            &player,
-            &enemies,
-            block_size,
-            &depth_buffer,
-            &texture_manager,
-        );
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    maze = load_maze(WORLD_MAPS[selected]);
+                    player.set_initial_position(&maze, block_size);
+                    enemies = Enemy::from_maze(&maze, block_size);
+                    window.disable_cursor();
+                    screen = Screen::Game;
+                } else {
+                    screen = Screen::Worlds(selected);
+                }
 
-        render_maze(&mut framebuffer, &maze, block_size);
-        render_player(&mut framebuffer, &mut player);
+                draw_screen(
+                    &mut window,
+                    &thread,
+                    &world_screens[selected],
+                    window_width,
+                    window_height,
+                );
+            }
+            Screen::Game => {
+                framebuffer.clear();
+                process_events(&mut window, &mut player, &maze, block_size);
+                enemies.iter_mut().for_each(|enemy| enemy.update(window.get_frame_time()));
+                let depth_buffer = render::render3d(
+                    &mut framebuffer,
+                    &player,
+                    &maze,
+                    block_size,
+                    &texture_manager,
+                );
+                render::render_enemies(
+                    &mut framebuffer,
+                    &player,
+                    &enemies,
+                    block_size,
+                    &depth_buffer,
+                    &texture_manager,
+                );
 
-        for i in 0..num_rays {
-            let current_ray = i as f32 / num_rays as f32;
-            let angle_offset = (current_ray - 0.5) * player.fov;
-            cast_ray(&mut framebuffer,  &player, &maze,  block_size, angle_offset,true, 8.0);
+                render_maze(&mut framebuffer, &maze, block_size);
+                render_player(&mut framebuffer, &mut player);
+
+                for i in 0..num_rays {
+                    let current_ray = i as f32 / num_rays as f32;
+                    let angle_offset = (current_ray - 0.5) * player.fov;
+                    cast_ray(
+                        &mut framebuffer,
+                        &player,
+                        &maze,
+                        block_size,
+                        angle_offset,
+                        true,
+                        8.0,
+                    );
+                }
+
+                framebuffer.swap_buffers(&mut window, &thread);
+            }
         }
-
-    
-        framebuffer.swap_buffers(&mut window, &thread);
-
         thread::sleep(Duration::from_millis(16));
-
     }
-    
 }
