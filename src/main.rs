@@ -31,6 +31,7 @@ fn main() {
         .size(window_width, window_height)
         .title("Example")
         .build();
+    window.disable_cursor();
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height, Color::BLACK);
 
@@ -39,7 +40,7 @@ fn main() {
     let maze: Maze = load_maze("src/maze.txt"); 
 
     let block_size = 10;
-    let player_movement_speed = block_size as f32 / 10.0;
+    let player_movement_speed = block_size as f32 / 5.0;
     let player_rotation_speed = block_size as f32 / 50.0;
     let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0, player_movement_speed, player_rotation_speed, PI/3.0);
     player.set_initial_position(&maze, block_size);

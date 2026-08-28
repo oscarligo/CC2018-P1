@@ -45,17 +45,15 @@ impl Player {
     }
 
     pub fn rotate_left(&mut self) {
-        self.angle -= self.rotation_speed;
-        if self.angle < 0.0 {
-            self.angle += 2.0 * PI; 
-        }
+        self.rotate(-self.rotation_speed);
     }
 
     pub fn rotate_right(&mut self) {
-        self.angle += self.rotation_speed;
-        if self.angle > 2.0 * PI {
-            self.angle -= 2.0 * PI; 
-        }
+        self.rotate(self.rotation_speed);
+    }
+
+    pub fn rotate(&mut self, radians: f32) {
+        self.angle = (self.angle + radians).rem_euclid(2.0 * PI);
     }
 
 
