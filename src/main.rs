@@ -31,6 +31,7 @@ enum Screen {
     Main,
     Worlds(usize),
     Game,
+    Death,
 }
 
 const WORLD_MAPS: [&str; 2] = ["src/world_1.txt", "src/world_2.txt"];
@@ -50,6 +51,8 @@ fn main() {
     let audio = RaylibAudio::init_audio_device().expect("Failed to initialize audio");
     let arrow_sound = audio.new_sound("assets/audio/arrow.mp3")
         .expect("Failed to load arrow sound");
+    let click_sound = audio.new_sound("assets/audio/click.mp3")
+        .expect("Failed to load menu click sound");
     let world_music = [
         audio.new_music("assets/audio/world_1.mp3")
             .expect("Failed to load world 1 music"),
@@ -77,6 +80,8 @@ fn main() {
     let mut current_world = 0;
     let main_screen = window.load_texture(&thread, "assets/main_screen.png")
         .expect("Failed to load main screen");
+    let death_screen = window.load_texture(&thread, "assets/death_screen.png")
+        .expect("Failed to load death screen");
     let world_screens = [
         window.load_texture(&thread, "assets/world_1.png")
             .expect("Failed to load world 1 screen"),
@@ -88,6 +93,14 @@ fn main() {
 
 
     while !window.window_should_close() {
+        if !matches!(screen, Screen::Game)
+            && [KeyboardKey::KEY_ENTER, KeyboardKey::KEY_W, KeyboardKey::KEY_S]
+                .iter()
+                .any(|&key| window.is_key_pressed(key))
+        {
+            click_sound.play();
+        }
+
         match screen {
             Screen::Main => {
                 if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
@@ -127,6 +140,12 @@ fn main() {
             Screen::Game => {
                 framebuffer.clear();
                 process_events(&mut window, &mut player, &maze, block_size);
+                if player_touches_enemy(&player, &enemies, block_size) {
+                    world_music[current_world].stop_stream();
+                    window.enable_cursor();
+                    screen = Screen::Death;
+                    continue;
+                }
                 if player_on_marker(&player, &maze, block_size, 'w') {
                     current_world = next_world(current_world);
                     maze = load_maze(WORLD_MAPS[current_world]);
@@ -186,9 +205,24 @@ fn main() {
 
                 framebuffer.swap_buffers(&mut window, &thread);
             }
+            Screen::Death => {
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    screen = Screen::Main;
+                }
+                draw_screen(&mut window, &thread, &death_screen, window_width, window_height);
+            }
         }
         thread::sleep(Duration::from_millis(16));
     }
+}
+
+fn player_touches_enemy(player: &Player, enemies: &[Enemy], block_size: usize) -> bool {
+    let contact_distance = block_size as f32 * 0.7;
+    enemies.iter().any(|enemy| {
+        let dx = player.position.x - enemy.position.x;
+        let dy = player.position.y - enemy.position.y;
+        dx * dx + dy * dy <= contact_distance * contact_distance
+    })
 }
 
 fn play_world_music(music: &[Music<'_>; 2], world: usize) {
