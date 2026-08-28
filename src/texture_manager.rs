@@ -5,7 +5,7 @@ pub struct TextureManager {
     wall_2: Image,
     wall_3: Image,
     wall_4: Image,
-    sprite: Image,
+    arrow: Image,
     floors: [Image; 2],
     ceilings: [Image; 2],
     portal_frames: [Image; 5],
@@ -23,8 +23,8 @@ impl TextureManager {
                 .expect("Failed to load stone brick texture"),
             wall_4: Image::load_image("assets/quartz_wall.png")
                 .expect("Failed to load stone wall texture"),
-            sprite: Image::load_image("assets/oak_log_block.png")
-                .expect("Failed to load first enemy frame"),
+            arrow: Image::load_image("assets/arrow.png")
+                .expect("Failed to load arrow texture"),
             floors: [
                 Image::load_image("assets/planks_wall.png")
                     .expect("Failed to load world 1 floor"),
@@ -71,6 +71,7 @@ impl TextureManager {
             'e' if frame % 5 == 0 => &self.enemy_frames[0],
             'e' => &self.enemy_frames[frame % 5],
             'w' => &self.portal_frames[frame % 5],
+            'a' => &self.arrow,
             _ => return Color::BLANK,
         };
         sample(image, u, v)

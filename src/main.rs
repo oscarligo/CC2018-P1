@@ -8,6 +8,7 @@ mod texture_manager;
 mod enemy;
 mod screens;
 mod portal;
+mod projectile;
 
 use raylib::prelude::*;
 use framebuffer::Framebuffer;
@@ -23,6 +24,7 @@ use texture_manager::TextureManager;
 use enemy::Enemy;
 use screens::*;
 use portal::Portal;
+use projectile::Projectile;
 
 #[derive(Clone, Copy)]
 enum Screen {
@@ -45,6 +47,16 @@ fn main() {
         .title("Example")
         .build();
 
+    let audio = RaylibAudio::init_audio_device().expect("Failed to initialize audio");
+    let arrow_sound = audio.new_sound("assets/audio/arrow.mp3")
+        .expect("Failed to load arrow sound");
+    let world_music = [
+        audio.new_music("assets/audio/world_1.mp3")
+            .expect("Failed to load world 1 music"),
+        audio.new_music("assets/audio/world_2.mp3")
+            .expect("Failed to load world 2 music"),
+    ];
+
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height, Color::BLACK);
 
     framebuffer.set_background_color(Color::BLACK);
@@ -61,6 +73,7 @@ fn main() {
     let texture_manager = TextureManager::new();
     let mut enemies = Enemy::from_maze(&maze, block_size);
     let mut portals = Portal::from_maze(&maze, block_size);
+    let mut projectiles = Vec::new();
     let mut current_world = 0;
     let main_screen = window.load_texture(&thread, "assets/main_screen.png")
         .expect("Failed to load main screen");
@@ -95,6 +108,8 @@ fn main() {
                     player.set_initial_position(&maze, block_size);
                     enemies = Enemy::from_maze(&maze, block_size);
                     portals = Portal::from_maze(&maze, block_size);
+                    projectiles.clear();
+                    play_world_music(&world_music, current_world);
                     window.disable_cursor();
                     screen = Screen::Game;
                 } else {
@@ -118,11 +133,21 @@ fn main() {
                     player.set_initial_position(&maze, block_size);
                     enemies = Enemy::from_maze(&maze, block_size);
                     portals = Portal::from_maze(&maze, block_size);
+                    projectiles.clear();
+                    play_world_music(&world_music, current_world);
+                }
+                if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    projectiles.push(Projectile::new(player.position, player.angle, block_size));
+                    arrow_sound.play();
                 }
 
                 let delta_time = window.get_frame_time();
+                world_music[current_world].update_stream();
                 enemies.iter_mut().for_each(|enemy| enemy.update(delta_time));
                 portals.iter_mut().for_each(|portal| portal.update(delta_time));
+                projectiles.retain_mut(|projectile| {
+                    projectile.update(delta_time, &maze, block_size)
+                });
                 let depth_buffer = render::render3d(
                     &mut framebuffer,
                     &player,
@@ -136,6 +161,7 @@ fn main() {
                     &player,
                     &enemies,
                     &portals,
+                    &projectiles,
                     block_size,
                     &depth_buffer,
                     &texture_manager,
@@ -163,6 +189,11 @@ fn main() {
         }
         thread::sleep(Duration::from_millis(16));
     }
+}
+
+fn play_world_music(music: &[Music<'_>; 2], world: usize) {
+    music.iter().for_each(Music::stop_stream);
+    music[world].play_stream();
 }
 
 fn player_on_marker(player: &Player, maze: &Maze, block_size: usize, marker: char) -> bool {

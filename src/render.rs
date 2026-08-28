@@ -6,6 +6,7 @@ use crate::caster::cast_ray;
 use crate::texture_manager::TextureManager;
 use crate::enemy::Enemy;
 use crate::portal::Portal;
+use crate::projectile::Projectile;
 use std::f32::consts::PI;
 
 
@@ -108,17 +109,23 @@ pub fn render_sprites(
     player: &Player,
     enemies: &[Enemy],
     portals: &[Portal],
+    projectiles: &[Projectile],
     block_size: usize,
     depth_buffer: &[f32],
     texture_manager: &TextureManager,
 ) {
     let mut sprites: Vec<_> = enemies
         .iter()
-        .map(|enemy| (enemy.position, enemy.marker, enemy.frame()))
+        .map(|enemy| (enemy.position, enemy.marker, enemy.frame(), 1.0))
         .chain(
             portals
                 .iter()
-                .map(|portal| (portal.position, portal.marker, portal.frame())),
+                .map(|portal| (portal.position, portal.marker, portal.frame(), 1.0)),
+        )
+        .chain(
+            projectiles
+                .iter()
+                .map(|projectile| (projectile.position, projectile.marker, 0, 0.2)),
         )
         .collect();
     sprites.sort_by(|a, b| {
@@ -126,7 +133,7 @@ pub fn render_sprites(
             .total_cmp(&distance_squared(a.0, player.position))
     });
 
-    for (position, marker, frame) in sprites {
+    for (position, marker, frame, scale) in sprites {
         let dx = position.x - player.position.x;
         let dy = position.y - player.position.y;
         let distance = (dx * dx + dy * dy).sqrt();
@@ -141,7 +148,7 @@ pub fn render_sprites(
             continue;
         }
 
-        let size = block_size as f32 * framebuffer.height as f32 / depth;
+        let size = block_size as f32 * framebuffer.height as f32 / depth * scale;
         let center_x = (relative_angle / player.fov + 0.5) * framebuffer.width as f32;
         let left = center_x - size / 2.0;
         let top = (framebuffer.height as f32 - size) / 2.0;
