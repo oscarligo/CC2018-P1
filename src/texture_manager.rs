@@ -1,31 +1,30 @@
 use raylib::prelude::*;
 
 pub struct TextureManager {
-    log: Image,
-    cobblestone: Image,
-    enemy_frames: [Image; 2],
+    wall_1: Image,
+    wall_2: Image,
+    sprite: Image,
+    floor: Image,
 }
 
 impl TextureManager {
     pub fn new() -> Self {
         Self {
-            log: Image::load_image("assets/oak_log_wall.png")
+            wall_1: Image::load_image("assets/oak_log_wall.png")
                 .expect("Failed to load oak log texture"),
-            cobblestone: Image::load_image("assets/cobblestone_wall.png")
+            wall_2: Image::load_image("assets/cobblestone_wall.png")
                 .expect("Failed to load cobblestone texture"),
-            enemy_frames: [
-                Image::load_image("assets/oak_log_block.png")
-                    .expect("Failed to load first enemy frame"),
-                Image::load_image("assets/cobblestone_block.png")
-                    .expect("Failed to load second enemy frame"),
-            ],
+            sprite: Image::load_image("assets/oak_log_block.png")
+                .expect("Failed to load first enemy frame"),
+            floor: Image::load_image("assets/cobblestone_wall.png")
+                .expect("Failed to load floor texture"),
         }
     }
 
     pub fn get_pixel_color(&self, ch: char, u: f32, v: f32) -> Color {
         let image = match ch {
-            '+' => &self.log,
-            '-' | '|' | 'g' | '#' => &self.cobblestone,
+            '+' => &self.wall_1,
+            '-' | '|' | 'g' | '#' => &self.wall_2,
             _ => return Color::WHITE,
         };
         sample(image, u, v)
@@ -33,10 +32,19 @@ impl TextureManager {
 
     pub fn get_sprite_pixel(&self, ch: char, frame: usize, u: f32, v: f32) -> Color {
         let image = match ch {
-            'e' => &self.enemy_frames[frame % 2],
+            'e' if frame % 2 == 0 => &self.sprite,
+            'e' => &self.floor,
             _ => return Color::BLANK,
         };
         sample(image, u, v)
+    }
+
+    pub fn get_floor_pixel(&self, u: f32, v: f32) -> Color {
+        sample(&self.floor, u, v)
+    }
+
+    pub fn get_ceiling_pixel(&self, u: f32, v: f32) -> Color {
+        sample(&self.wall_1, u, v)
     }
 }
 

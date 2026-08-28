@@ -24,6 +24,8 @@ pub fn render3d(
     let height = framebuffer.height as f32;
     let half_height = height / 2.0;
     let mut depth_buffer = vec![f32::INFINITY; num_rays as usize];
+    render_floor_and_ceiling(framebuffer, player, block_size, texture_manager);
+
     for i in 0..num_rays {
         let current_ray = i as f32 / num_rays as f32;
         let angle_offset = (current_ray - 0.5) * player.fov;
@@ -52,6 +54,45 @@ pub fn render3d(
         }
     }
     depth_buffer
+}
+
+fn render_floor_and_ceiling(
+    framebuffer: &mut Framebuffer,
+    player: &Player,
+    block_size: usize,
+    texture_manager: &TextureManager,
+) {
+    let width = framebuffer.width as f32;
+    let height = framebuffer.height as f32;
+
+    for y in 0..framebuffer.height {
+        if y == framebuffer.height / 2 {
+            continue;
+        }
+        let perpendicular_distance = plane_distance(y as f32, height, block_size as f32);
+
+        for x in 0..framebuffer.width {
+            let angle_offset = (x as f32 / width - 0.5) * player.fov;
+            let distance = perpendicular_distance / angle_offset.cos();
+            let ray_angle = player.angle + angle_offset;
+            let world_x = player.position.x + distance * ray_angle.cos();
+            let world_y = player.position.y + distance * ray_angle.sin();
+            let u = world_x.rem_euclid(block_size as f32) / block_size as f32;
+            let v = world_y.rem_euclid(block_size as f32) / block_size as f32;
+
+            let color = if y < framebuffer.height / 2 {
+                texture_manager.get_ceiling_pixel(u, v)
+            } else {
+                texture_manager.get_floor_pixel(u, v)
+            };
+            framebuffer.set_current_color(color);
+            framebuffer.set_pixel(x, y);
+        }
+    }
+}
+
+fn plane_distance(screen_y: f32, screen_height: f32, block_size: f32) -> f32 {
+    block_size * screen_height / (2.0 * (screen_y - screen_height / 2.0).abs())
 }
 
 fn texture_u(hit_x: f32, hit_y: f32, vertical_hit: bool, block_size: f32) -> f32 {
