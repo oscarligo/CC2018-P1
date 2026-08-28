@@ -5,6 +5,7 @@ use crate::maze::*;
 use crate::caster::cast_ray;
 use crate::texture_manager::TextureManager;
 use crate::enemy::Enemy;
+use crate::portal::Portal;
 use std::f32::consts::PI;
 
 
@@ -100,23 +101,32 @@ fn texture_u(hit_x: f32, hit_y: f32, vertical_hit: bool, block_size: f32) -> f32
     offset.rem_euclid(block_size) / block_size
 }
 
-pub fn render_enemies(
+pub fn render_sprites(
     framebuffer: &mut Framebuffer,
     player: &Player,
     enemies: &[Enemy],
+    portals: &[Portal],
     block_size: usize,
     depth_buffer: &[f32],
     texture_manager: &TextureManager,
 ) {
-    let mut ordered: Vec<_> = enemies.iter().collect();
-    ordered.sort_by(|a, b| {
-        distance_squared(b.position, player.position)
-            .total_cmp(&distance_squared(a.position, player.position))
+    let mut sprites: Vec<_> = enemies
+        .iter()
+        .map(|enemy| (enemy.position, enemy.marker, enemy.frame()))
+        .chain(
+            portals
+                .iter()
+                .map(|portal| (portal.position, portal.marker, portal.frame())),
+        )
+        .collect();
+    sprites.sort_by(|a, b| {
+        distance_squared(b.0, player.position)
+            .total_cmp(&distance_squared(a.0, player.position))
     });
 
-    for enemy in ordered {
-        let dx = enemy.position.x - player.position.x;
-        let dy = enemy.position.y - player.position.y;
+    for (position, marker, frame) in sprites {
+        let dx = position.x - player.position.x;
+        let dy = position.y - player.position.y;
         let distance = (dx * dx + dy * dy).sqrt();
         let relative_angle = (dy.atan2(dx) - player.angle + PI).rem_euclid(2.0 * PI) - PI;
 
@@ -145,7 +155,7 @@ pub fn render_enemies(
             let u = (x as f32 - left) / size;
             for y in start_y..end_y {
                 let v = (y as f32 - top) / size;
-                let color = texture_manager.get_sprite_pixel(enemy.marker, enemy.frame(), u, v);
+                let color = texture_manager.get_sprite_pixel(marker, frame, u, v);
                 if color.a > 0 {
                     framebuffer.set_current_color(color);
                     framebuffer.set_pixel(x, y);

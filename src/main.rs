@@ -7,6 +7,7 @@ mod events;
 mod texture_manager;
 mod enemy;
 mod screens;
+mod portal;
 
 use raylib::prelude::*;
 use framebuffer::Framebuffer;
@@ -21,6 +22,7 @@ use events::process_events;
 use texture_manager::TextureManager;
 use enemy::Enemy;
 use screens::*;
+use portal::Portal;
 
 #[derive(Clone, Copy)]
 enum Screen {
@@ -32,7 +34,7 @@ enum Screen {
 const WORLD_MAPS: [&str; 2] = ["src/world_1.txt", "src/world_2.txt"];
 
 fn main() {
-    let window_width: i32 = 800;
+    let window_width: i32 = 1080;
     let window_height: i32 = 600;
     
     let framebuffer_width = window_width as u32;
@@ -58,6 +60,8 @@ fn main() {
 
     let texture_manager = TextureManager::new();
     let mut enemies = Enemy::from_maze(&maze, block_size);
+    let mut portals = Portal::from_maze(&maze, block_size);
+    let mut current_world = 0;
     let main_screen = window.load_texture(&thread, "assets/main_screen.png")
         .expect("Failed to load main screen");
     let world_screens = [
@@ -86,9 +90,11 @@ fn main() {
                 }
 
                 if window.is_key_pressed(KeyboardKey::KEY_ENTER) {
+                    current_world = selected;
                     maze = load_maze(WORLD_MAPS[selected]);
                     player.set_initial_position(&maze, block_size);
                     enemies = Enemy::from_maze(&maze, block_size);
+                    portals = Portal::from_maze(&maze, block_size);
                     window.disable_cursor();
                     screen = Screen::Game;
                 } else {
@@ -106,7 +112,17 @@ fn main() {
             Screen::Game => {
                 framebuffer.clear();
                 process_events(&mut window, &mut player, &maze, block_size);
-                enemies.iter_mut().for_each(|enemy| enemy.update(window.get_frame_time()));
+                if player_on_marker(&player, &maze, block_size, 'w') {
+                    current_world = next_world(current_world);
+                    maze = load_maze(WORLD_MAPS[current_world]);
+                    player.set_initial_position(&maze, block_size);
+                    enemies = Enemy::from_maze(&maze, block_size);
+                    portals = Portal::from_maze(&maze, block_size);
+                }
+
+                let delta_time = window.get_frame_time();
+                enemies.iter_mut().for_each(|enemy| enemy.update(delta_time));
+                portals.iter_mut().for_each(|portal| portal.update(delta_time));
                 let depth_buffer = render::render3d(
                     &mut framebuffer,
                     &player,
@@ -114,10 +130,11 @@ fn main() {
                     block_size,
                     &texture_manager,
                 );
-                render::render_enemies(
+                render::render_sprites(
                     &mut framebuffer,
                     &player,
                     &enemies,
+                    &portals,
                     block_size,
                     &depth_buffer,
                     &texture_manager,
@@ -145,4 +162,10 @@ fn main() {
         }
         thread::sleep(Duration::from_millis(16));
     }
+}
+
+fn player_on_marker(player: &Player, maze: &Maze, block_size: usize, marker: char) -> bool {
+    maze.get(player.position.y as usize / block_size)
+        .and_then(|row| row.get(player.position.x as usize / block_size))
+        == Some(&marker)
 }

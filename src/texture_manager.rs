@@ -5,6 +5,7 @@ pub struct TextureManager {
     wall_2: Image,
     sprite: Image,
     floor: Image,
+    portal_frames: [Image; 5],
 }
 
 impl TextureManager {
@@ -18,6 +19,13 @@ impl TextureManager {
                 .expect("Failed to load first enemy frame"),
             floor: Image::load_image("assets/cobblestone_wall.png")
                 .expect("Failed to load floor texture"),
+            portal_frames: [
+                Image::load_image("assets/nether_portal/portal_1.png").expect("Failed to load portal frame 1"),
+                Image::load_image("assets/nether_portal/portal_2.png").expect("Failed to load portal frame 2"),
+                Image::load_image("assets/nether_portal/portal_3.png").expect("Failed to load portal frame 3"),
+                Image::load_image("assets/nether_portal/portal_4.png").expect("Failed to load portal frame 4"),
+                Image::load_image("assets/nether_portal/portal_5.png").expect("Failed to load portal frame 5"),
+            ],
         }
     }
 
@@ -34,6 +42,7 @@ impl TextureManager {
         let image = match ch {
             'e' if frame % 2 == 0 => &self.sprite,
             'e' => &self.floor,
+            'w' => &self.portal_frames[frame % 5],
             _ => return Color::BLANK,
         };
         sample(image, u, v)

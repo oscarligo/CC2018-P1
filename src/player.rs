@@ -23,7 +23,7 @@ impl Player {
             .get(next_y as usize / block_size)
             .and_then(|row| row.get(next_x as usize / block_size));
 
-        if matches!(cell, Some(' ' | 'p' | 'g')) {
+        if matches!(cell, Some(' ' | 'p' | 'g' | 'w')) {
             self.position = Vector2::new(next_x, next_y);
         }
     }
