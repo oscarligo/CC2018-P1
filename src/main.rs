@@ -24,7 +24,7 @@ fn main() {
     let window_width: i32 = 800;
     let window_height: i32 = 600;
     
-    let framebuffer_width = window_height as u32;
+    let framebuffer_width = window_width as u32;
     let framebuffer_height: u32 = window_height as u32;
 
     let (mut window, thread) = raylib::init()
@@ -40,7 +40,7 @@ fn main() {
 
     let block_size = 10;
     let player_movement_speed = block_size as f32 / 10.0;
-    let player_rotation_speed = block_size as f32 / 100.0;
+    let player_rotation_speed = block_size as f32 / 50.0;
     let mut player = Player::new(Vector2::new(0.0, 0.0), PI/4.0, player_movement_speed, player_rotation_speed, PI/3.0);
     player.set_initial_position(&maze, block_size);
     let num_rays = 5; 
